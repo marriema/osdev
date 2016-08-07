@@ -1,0 +1,12 @@
+# Ignore intermediate object files
+*.o
+*.out
+
+# Ignore hard disk image/floppy image
+*.img
+
+# Ignore kernel executable
+kernel
+
+# Ignore bochs output
+bochsout.txt
