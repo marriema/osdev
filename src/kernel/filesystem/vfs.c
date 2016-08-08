@@ -1,5 +1,5 @@
 #include <vfs.h>
-//#include <ext2.h>
+#include <ext2.h>
 #include <kheap.h>
 #include <string.h>
 #include <printf.h>
@@ -7,6 +7,13 @@
 
 gtree_t * vfs_tree;
 vfs_node_t * vfs_root;
+
+uint32_t vfs_get_file_size(vfs_node_t * node) {
+    if(node && node->get_file_size) {
+        return node->get_file_size(node);
+    }
+    return 0;
+}
 
 /*
  * This function is for debug,purpose

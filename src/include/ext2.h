@@ -137,6 +137,8 @@ typedef struct ext2_fs {
     uint32_t bgd_blocks;
 }ext2_fs_t;
 
+uint32_t ext2_file_size(vfs_node_t * node);
+
 void ext2_mkdir(vfs_node_t * parent, char * name, uint16_t permission);
 
 void ext2_mkfile(vfs_node_t * parent, char * name, uint16_t permission);

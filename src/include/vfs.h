@@ -39,11 +39,10 @@
 
 struct vfs_node;
 
+typedef uint32_t (*get_file_size_callback)(struct vfs_node * node);
 typedef uint32_t (*read_callback) (struct vfs_node *, uint32_t, uint32_t, char *);
 typedef uint32_t (*write_callback) (struct vfs_node *, uint32_t, uint32_t, char *);
-
 typedef void (*open_callback) (struct vfs_node*, uint32_t flags);
-
 typedef void (*close_callback) (struct vfs_node *);
 typedef struct dirent *(*readdir_callback) (struct vfs_node *, uint32_t);
 typedef struct vfs_node *(*finddir_callback) (struct vfs_node *, char *name);
@@ -89,6 +88,7 @@ typedef struct vfs_node {
     ioctl_callback ioctl;
     get_size_callback get_size;
     chmod_callback chmod;
+    get_file_size_callback get_file_size;
 
     listdir_callback listdir;
 }vfs_node_t;
@@ -104,6 +104,7 @@ typedef struct vfs_entry {
 }vfs_entry_t;
 
 
+uint32_t vfs_get_file_size(vfs_node_t * node);
 
 uint32_t vfs_read(vfs_node_t *node, uint32_t offset, uint32_t size, char *buffer);
 

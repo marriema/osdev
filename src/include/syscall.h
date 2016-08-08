@@ -7,6 +7,8 @@
 
 #define NUM_SYSCALLS 2
 
+extern void * syscall_table[NUM_SYSCALLS];
+
 void syscall_dispatcher(register_t * regs);
 
 void syscall_init();

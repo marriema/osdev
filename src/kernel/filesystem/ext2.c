@@ -3,6 +3,14 @@
 #include <string.h>
 #include <printf.h>
 
+uint32_t ext2_file_size(vfs_node_t * node) {
+    ext2_fs_t * ext2fs = node->device;
+    inode_t * inode = kmalloc(sizeof(inode_t));
+    read_inode_metadata(ext2fs, inode, node->inode_num);
+    uint32_t ret = inode->size;
+    kfree(inode);
+    return ret;
+}
 /*
  * Both ext2_mkdir and ext2_mkfile calls ext2_create_entry to create an entry under certain directory
  * */
@@ -160,6 +168,7 @@ vfs_node_t * vfsnode_from_direntry(ext2_fs_t * ext2fs, direntry_t * dir, inode_t
         ret->read     = ext2_read;
         ret->write    = ext2_write;
         ret->unlink = ext2_unlink;
+        ret->get_file_size = ext2_file_size;
     }
     if ((inode->permission & EXT2_S_IFDIR) == EXT2_S_IFDIR) {
         ret->flags   |= FS_DIRECTORY;
