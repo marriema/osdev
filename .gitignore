@@ -6,7 +6,8 @@
 *.img
 
 # Ignore kernel executable
-kernel
+os_kernel
+
 
 # Ignore bochs output
 bochsout.txt
