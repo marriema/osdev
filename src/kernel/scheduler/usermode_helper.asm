@@ -1,7 +1,6 @@
 global switch_to_user
 switch_to_user:
     ; Turn off interrupts
-    cli
     ; Setup data segment(remember, a selector is an offset into the gdt table, user data is the 4th segment(counting from 0), so cs = 4 * 8 = 24 = 0x20, 0x20+3(rpl) = 0x23)
     mov ax, 0x23
     mov ds, ax

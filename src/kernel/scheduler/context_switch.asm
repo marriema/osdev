@@ -20,7 +20,6 @@ regs_switch:
     ; Right now, eax, ebp, esp are not restored yet
 
     ; Enter usermode from here(make sure the registers are restored correctly for the user process !)
-    cli
     mov ax, 0x23
     mov ds, ax
     mov es, ax
@@ -40,4 +39,6 @@ regs_switch:
     mov eax, [ebp + 0]
     ; Now, restore ebp
     mov ebp, [ebp + 20]
-    iretd
+    sti
+    xchg bx, bx
+    iret

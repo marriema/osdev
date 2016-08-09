@@ -56,7 +56,8 @@ void free_block(uint32_t blk_num) {
  * Helper function for allocate_block(), return the first free block
  * */
 uint32_t first_free_block() {
-    for(uint32_t i = 0; i < total_blocks; i++) {
+    uint32_t i;
+    for(i = 0; i < total_blocks; i++) {
         if(!ISSET(i))
             return i;
     }

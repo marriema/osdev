@@ -9,6 +9,8 @@
 #define TIMER_DATA 0x40
 #define TIMER_ICW 0x36
 
+extern uint32_t jiffies;
+extern uint16_t hz;
 typedef void (*wakeup_callback) (void * data);
 
 typedef struct wakeup_info {

@@ -35,4 +35,7 @@ void syscall_init() {
     register_interrupt_handler(0x80, syscall_dispatcher);
 }
 
+// Complete set of syscalls implementation
+void _exit() {
 
+}

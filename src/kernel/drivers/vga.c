@@ -30,7 +30,8 @@ void print_char(char c) {
         curr_y++;
     }
     else if(c == '\t') {
-        for(int i = 0; i < 4; i++)
+        int i;
+        for(i = 0; i < 4; i++)
             print_char(' ');
     }
     else if(c >= ' ') {

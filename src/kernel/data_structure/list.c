@@ -20,6 +20,22 @@ uint32_t list_size(list_t * list) {
 }
 
 /*
+ * Given a listnode, remove it from lis
+ * */
+void list_remove_node(list_t * list, listnode_t * node) {
+    if(list->head == node)
+        list_remove_front(list);
+    else if(list->tail == node)
+        list_remove_back(list);
+    else {
+        node->next->prev = node->prev;
+        node->prev->next = node->next;
+        list->size--;
+        kfree(node->val);
+        kfree(node);
+    }
+}
+/*
  * Insert a value at the front of list
  * */
 listnode_t * list_insert_front(list_t * list, void * val) {

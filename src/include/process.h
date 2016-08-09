@@ -1,12 +1,15 @@
 #ifndef PROCESS_H
 #define PROCESS_H
 #include <system.h>
+#include <pic.h>
 #include <list.h>
 #include <timer.h>
 #include <printf.h>
 #include <paging.h>
 #include <isr.h>
+#include <math.h>
 
+#define SCHED_TOLERANCE 5
 typedef uint32_t pid_t;
 typedef struct context {
     uint32_t eax; // 0
@@ -24,9 +27,11 @@ typedef struct context {
 
 typedef struct pcb {
     context_t regs;
-    uint32_t state;
     pid_t pid;
     listnode_t * self;
+    uint32_t initial;
+    uint32_t state;
+    uint32_t time_slice;
 }pcb_t;
 
 extern list_t * process_list;

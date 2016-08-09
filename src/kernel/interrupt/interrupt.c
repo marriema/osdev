@@ -22,7 +22,6 @@ void final_irq_handler(register_t reg) {
         handler(&reg);
     }
     irq_ack(reg.int_no);
-
 }
 
 void print_reg(register_t * reg) {

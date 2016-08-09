@@ -1,1 +1,1 @@
-gdb kernel -ex "target remote localhost:1234"
+gdb os_kernel -ex "target remote localhost:1234"

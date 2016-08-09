@@ -1,6 +1,6 @@
 # Setup compiler name and flags
 CC=i686-elf-gcc
-CFLAGS=-Wall -Wno-int-conversion -fstrength-reduce -fomit-frame-pointer -finline-functions -nostdlib -ffreestanding -I./include -g -ggdb -c
+CFLAGS=-Wall -Wno-int-conversion -fstrength-reduce -fomit-frame-pointer -finline-functions -nostdlib -ffreestanding -I./include -std=gnu99 -g -ggdb -c
 NASM=nasm
 NASMFLAGS=-f elf32
 LDFLAGS=-T link.ld -ffreestanding -O2 -nostdlib -g -ggdb
@@ -18,7 +18,7 @@ ASM_SOURCES=$(ROOT_DIR)/entry.asm $(DT_DIR)/idt_helper.asm $(DT_DIR)/gdt_helper.
 
 # Setup object files
 OBJECTS=$(SOURCES:.c=.o) $(ASM_SOURCES:.asm=.o)
-EXECUTABLE=../kernel
+EXECUTABLE=../os_kernel
 
 # Setup all source directories
 KERNEL_DIR=kernel

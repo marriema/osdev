@@ -75,6 +75,7 @@ int kmain(multiboot_info_t * mb_info) {
     process_init();
     // Create a process for testing
     pcb_t * p1 = kcalloc(sizeof(pcb_t), 1);
+    p1->initial = 1;
     p1->self = list_insert_front(process_list, p1);
     current_process = p1;
 
@@ -83,7 +84,10 @@ int kmain(multiboot_info_t * mb_info) {
 
     printf("Initializing system calls and enter usermode...\n");
     syscall_init();
-    load_program("/userentry");
+    vfs_db_listdir("/");
+
+    load_program("/test2.bin");
+
     enter_usermode();
     uint32_t esp;
     asm volatile("mov %%esp, %0" : "=r"(esp));
@@ -94,5 +98,6 @@ int kmain(multiboot_info_t * mb_info) {
     set_curr_color(LIGHT_RED);
 
     printf("\nDone!\n");
+    for(;;);
     return 0;
 }

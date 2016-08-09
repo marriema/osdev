@@ -3,7 +3,7 @@
 #include <kheap.h>
 #include <string.h>
 #include <printf.h>
-#include <errno.h>
+#include <my_errno.h>
 
 gtree_t * vfs_tree;
 vfs_node_t * vfs_root;
