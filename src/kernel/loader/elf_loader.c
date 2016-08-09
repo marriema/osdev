@@ -16,7 +16,8 @@ void load_program(char * filename) {
     pcb_t * p1 = kcalloc(sizeof(pcb_t), 1);
     memcpy(p1, current_process, sizeof(pcb_t));
     p1->regs.eip = (uint32_t)program_code;
-    //p1->regs.eflags = 0x200; // enable interrupt
+    p1->regs.eflags = 0x206; // enable interrupt
+    p1->initial = 0;
     p1->self = list_insert_front(process_list, p1);
 
     // yield

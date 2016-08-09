@@ -86,12 +86,12 @@ int kmain(multiboot_info_t * mb_info) {
     syscall_init();
     vfs_db_listdir("/");
 
-    load_program("/test2.bin");
-
-    enter_usermode();
     uint32_t esp;
     asm volatile("mov %%esp, %0" : "=r"(esp));
     tss_set_stack(0x10, esp);
+
+    load_program("/test2.bin");
+
 
 
 
