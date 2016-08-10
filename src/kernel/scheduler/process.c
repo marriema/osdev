@@ -7,6 +7,9 @@ pcb_t * last_process;
 
 uint32_t prev_jiffies;
 
+// Whenever interrupt/exception/syscall(which is soft exception) happens, we should store the context from previous process in here, so that scheduler can use it
+register_t * saved_context;
+
 /*
  * Yeah, context switch, what else to put here ?...
  * */
@@ -35,7 +38,7 @@ void context_switch(register_t * p_regs, context_t * n_regs) {
 /*
  * This function is registered to the timer wakeup list, so it will be wakeup every 2/18 seconds
  * */
-void process_scheduler(void * data) {
+void schedule() {
     printf("Process Scheduler running\n");
     pcb_t * next;
     if(!current_process) return;
@@ -67,11 +70,7 @@ void process_scheduler(void * data) {
 
     last_process = current_process;
     current_process = next;
-    context_switch(data, &next->regs);
-}
-
-void yield(register_t * data) {
-    process_scheduler(data);
+    context_switch(saved_context, &next->regs);
 }
 
 /*
@@ -80,5 +79,5 @@ void yield(register_t * data) {
 void process_init() {
     process_list = list_create();
     // Tell the timer to call our process_scheduler every 2/18 seconds
-    register_wakeup_call(process_scheduler, 30.0/hz);
+    register_wakeup_call(schedule, 30.0/hz);
 }

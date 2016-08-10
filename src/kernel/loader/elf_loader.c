@@ -18,9 +18,10 @@ void load_program(char * filename) {
     p1->regs.eip = (uint32_t)program_code;
     p1->regs.eflags = 0x206; // enable interrupt
     p1->initial = 0;
+    p1->time_slice = 50;
     p1->self = list_insert_front(process_list, p1);
 
-    // yield
+    // schedule
     asm volatile("mov $1, %eax");
     asm volatile("int $0x80");
 }

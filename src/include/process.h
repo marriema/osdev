@@ -10,6 +10,16 @@
 #include <math.h>
 
 #define SCHED_TOLERANCE 5
+
+// All possible process state, copied from sched.h
+#define TASK_RUNNING            0
+#define TASK_INTERRUPTIBLE      1
+#define TASK_UNINTERRUPTIBLE    2
+#define TASK_ZOMBIE             4
+#define TASK_STOPPED            8
+#define TASK_SWAPPING           16
+#define TASK_EXCLUSIVE          32
+
 typedef uint32_t pid_t;
 typedef struct context {
     uint32_t eax; // 0
@@ -29,6 +39,7 @@ typedef struct pcb {
     context_t regs;
     pid_t pid;
     listnode_t * self;
+    void * stack;
     uint32_t initial;
     uint32_t state;
     uint32_t time_slice;
@@ -36,10 +47,11 @@ typedef struct pcb {
 
 extern list_t * process_list;
 extern pcb_t * current_process;
+extern register_t * saved_context;
 
 
 
 void process_init();
 void regs_switch(context_t * regs2);
-void yield(register_t * data);
+void schedule();
 #endif

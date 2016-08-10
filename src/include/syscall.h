@@ -13,4 +13,7 @@ void syscall_dispatcher(register_t * regs);
 
 void syscall_init();
 
+void _exit();
+
+
 #endif

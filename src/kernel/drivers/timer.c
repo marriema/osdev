@@ -56,11 +56,12 @@ void register_wakeup_call(wakeup_callback func, double sec) {
  * */
 void timer_handler(register_t * reg) {
     jiffies++;
+    saved_context = reg;
     foreach(t, wakeup_list) {
          wakeup_info_t * w = t->val;
          if(jiffies == w->jiffies) {
             w->jiffies += w->sec * hz;
-            w->func(NULL);
+            w->func();
          }
     }
     if(jiffies % 200 == 0) {

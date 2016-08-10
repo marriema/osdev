@@ -3,6 +3,7 @@
 #include <isr.h>
 #include <list.h>
 #include <kheap.h>
+#include <process.h>
 
 #define INPUT_CLOCK_FREQUENCY 1193180
 #define TIMER_COMMAND 0x43
@@ -11,7 +12,7 @@
 
 extern uint32_t jiffies;
 extern uint16_t hz;
-typedef void (*wakeup_callback) (void * data);
+typedef void (*wakeup_callback) ();
 
 typedef struct wakeup_info {
     wakeup_callback func;
