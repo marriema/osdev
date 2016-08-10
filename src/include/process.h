@@ -8,6 +8,7 @@
 #include <paging.h>
 #include <isr.h>
 #include <math.h>
+#include <vfs.h>
 
 #define SCHED_TOLERANCE 5
 
@@ -40,9 +41,9 @@ typedef struct pcb {
     pid_t pid;
     listnode_t * self;
     void * stack;
-    uint32_t initial;
     uint32_t state;
     uint32_t time_slice;
+    page_directory_t * page_dir;
 }pcb_t;
 
 extern list_t * process_list;
@@ -51,7 +52,9 @@ extern register_t * saved_context;
 
 
 
+pid_t allocate_pid();
 void process_init();
 void regs_switch(context_t * regs2);
 void schedule();
+void create_process(char * filename);
 #endif

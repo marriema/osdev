@@ -74,6 +74,9 @@ extern page_directory_t * TEMP_PAGE_DIRECTORY;
 extern uint8_t * bitmap;
 extern uint32_t  bitmap_size;
 
+// Defined in paging.c
+extern page_directory_t * kpage_dir;
+
 
 void * virtual2phys(page_directory_t * dir, void * virtual_addr);
 
@@ -90,6 +93,8 @@ void switch_page_directory(page_directory_t * page_dir, uint32_t phys);
 void enable_paging();
 
 void * ksbrk(int size);
+
+void copy_page_table(page_directory_t * dst, page_directory_t * src);
 
 void page_fault_handler(register_t * reg);
 #endif

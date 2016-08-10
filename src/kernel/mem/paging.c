@@ -250,6 +250,19 @@ ret:
     return old_heap_curr;
 }
 
+/*
+ * Copy a page table
+ * */
+void copy_page_table(page_directory_t * dst, page_directory_t * src) {
+    for(uint32_t i = 0; i < 1024; i++) {
+        dst->tables[i] = src->tables[i];
+        dst->ref_tables[i] = src->ref_tables[i];
+        if(src->ref_tables[i]) {
+            dst->ref_tables[i] = kmalloc(sizeof(page_table_t));
+            memcpy(dst->ref_tables[i], src->ref_tables[i], sizeof(page_table_t));
+        }
+    }
+}
 /* Print out useful information when a page fault occur
  * */
 void page_fault_handler(register_t * reg) {

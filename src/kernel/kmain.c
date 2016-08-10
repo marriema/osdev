@@ -73,11 +73,6 @@ int kmain(multiboot_info_t * mb_info) {
 
 
     process_init();
-    // Create a process for testing
-    pcb_t * p1 = kcalloc(sizeof(pcb_t), 1);
-    p1->initial = 1;
-    p1->self = list_insert_front(process_list, p1);
-    current_process = p1;
 
 
     set_curr_color(WHITE);
@@ -90,7 +85,7 @@ int kmain(multiboot_info_t * mb_info) {
     asm volatile("mov %%esp, %0" : "=r"(esp));
     tss_set_stack(0x10, esp);
 
-    load_program("/test2.bin");
+    create_process("/test2.bin");
 
 
 

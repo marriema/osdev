@@ -5,7 +5,7 @@
 #include <vfs.h>
 #include <process.h>
 
-#define NUM_SYSCALLS 2
+#define NUM_SYSCALLS 3
 
 extern void * syscall_table[NUM_SYSCALLS];
 

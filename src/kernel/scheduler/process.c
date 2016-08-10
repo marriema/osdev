@@ -6,27 +6,31 @@ pcb_t * current_process;
 pcb_t * last_process;
 
 uint32_t prev_jiffies;
-
+pid_t curr_pid;
 // Whenever interrupt/exception/syscall(which is soft exception) happens, we should store the context from previous process in here, so that scheduler can use it
 register_t * saved_context;
 
+pid_t allocate_pid() {
+    return curr_pid++;
+}
 /*
  * Yeah, context switch, what else to put here ?...
  * */
 void context_switch(register_t * p_regs, context_t * n_regs) {
     // Save registers of current running process to memory(which is current_process->regs)
-    last_process->regs.eax = p_regs->eax;
-    last_process->regs.ebx = p_regs->ebx;
-    last_process->regs.ecx = p_regs->ecx;
-    last_process->regs.edx = p_regs->edx;
-    last_process->regs.esi = p_regs->esi;
-    last_process->regs.edi = p_regs->edi;
-    last_process->regs.ebp = p_regs->ebp;
-    last_process->regs.esp = p_regs->useresp;
-    last_process->regs.eflags = p_regs->eflags;
-    last_process->regs.eip = p_regs->eip;
-    asm volatile("mov %%cr3, %0" : "=r"(last_process->regs.cr3));
-
+    if(last_process) {
+        last_process->regs.eax = p_regs->eax;
+        last_process->regs.ebx = p_regs->ebx;
+        last_process->regs.ecx = p_regs->ecx;
+        last_process->regs.edx = p_regs->edx;
+        last_process->regs.esi = p_regs->esi;
+        last_process->regs.edi = p_regs->edi;
+        last_process->regs.ebp = p_regs->ebp;
+        last_process->regs.esp = p_regs->useresp;
+        last_process->regs.eflags = p_regs->eflags;
+        last_process->regs.eip = p_regs->eip;
+        asm volatile("mov %%cr3, %0" : "=r"(last_process->regs.cr3));
+    }
     // Switch page directory
     if(((page_directory_t*)n_regs->cr3) != NULL)
         switch_page_directory((page_directory_t*)n_regs->cr3, 1);
@@ -41,38 +45,81 @@ void context_switch(register_t * p_regs, context_t * n_regs) {
 void schedule() {
     printf("Process Scheduler running\n");
     pcb_t * next;
-    if(!current_process) return;
-    // Only a fake process in the process list, not meaningful to schedule
-    if(current_process->initial && list_size(process_list) == 1) {
-        printf("Useless sched\n");
-        return;
-    }
-    if(current_process->initial) {
-        list_remove_node(process_list, current_process->self);
+    if(!list_size(process_list)) return;
+
+    if(!current_process) {
+        // First process, this will only happen when we create the user entry process, we'll make sure this first process never exits
         prev_jiffies = jiffies;
+        current_process = list_peek_front(process_list);
+        last_process = NULL;
+        context_switch(NULL, &current_process->regs);
     }
-    else{
+
+    // save next process's listnode
+    listnode_t * nextnode = (current_process->self)->next;
+    if(current_process->state == TASK_ZOMBIE) {
+        // Make sure we won't choose a zombie process to be run next
+        list_remove_node(process_list, current_process->self);
+        last_process = NULL;
+    }
+    else {
         // Take a look at current process's time slice, compare it with jiffies - prev_jiffies, if the abs(time_slice, jiffies - prev_jiffies) <= some number, switch to next process
         int cmp = jiffies - prev_jiffies;
         int slice = current_process->time_slice;
         // otherwise, we'll keep current process running
-        if(abs(cmp - slice) > SCHED_TOLERANCE)
-            return;
+        if(current_process->state != TASK_ZOMBIE && abs(cmp - slice) > SCHED_TOLERANCE)
+           return;
     }
 
-    // Now, find a process qualified to be ran next, for now, we're just doing a round robin scheduling
-    listnode_t * nextnode = (current_process->self)->next;
+    // choose next process
     if(!nextnode)
         next = list_peek_front(process_list);
     else
         next = nextnode->val;
 
-
-    last_process = current_process;
     current_process = next;
+    if(current_process == NULL)
+        PANIC("no process left, did you exit all user process ??? not cool man, never exit the userspace init process!!");
     context_switch(saved_context, &next->regs);
 }
 
+/*
+ * Create a new process, load a program from filesystem and run it
+ * */
+void create_process(char * filename) {
+    vfs_node_t * program = file_open(filename, 0);
+    if(!program) {
+        printf("Fail to open %s, does it even exist?\n", filename);
+        return;
+    }
+    uint32_t size = vfs_get_file_size(program);
+    char * program_code = kcalloc(size, 1);
+    vfs_read(program, 0, size, program_code);
+
+    // Create and insert a process, the pcb struct is in kernel space
+    pcb_t * p1 = kcalloc(sizeof(pcb_t), 1);
+    p1->pid = allocate_pid();
+    // Right now, program code is placed in kernel space, which is weird.. should be put in user space, also this whole program loading thing should be done after user addr space is created
+    // but now just place in randomly in kernel space
+    p1->regs.eip = (uint32_t)program_code;
+    p1->regs.eflags = 0x206; // enable interrupt
+    p1->time_slice = 50;
+    p1->self = list_insert_front(process_list, p1);
+
+    // Create a 2mb stack for the new process
+    p1->stack = kmalloc(2 * 1024 * 1024);
+    p1->regs.esp = (uint32_t)p1->stack + 2 * 1024 * 1024; // wait, will schedule() load this stack ? or the one set in tss ?
+
+    // Create an address space for the process, how ?
+    // kmalloc a page directory for the process, then copy the entire kernel page dirs and tables(the frames don't have to be copied though)
+    p1->page_dir = kcalloc(sizeof(page_directory_t), 1);
+    copy_page_table(p1->page_dir, kpage_dir);
+    p1->regs.cr3 = (uint32_t)virtual2phys(kpage_dir, p1->page_dir);
+    // Now, the process has its own address space, stack,
+    // schedule
+    asm volatile("mov $1, %eax");
+    asm volatile("int $0x80");
+}
 /*
  * Init process scheduler
  * */
