@@ -35,8 +35,8 @@ void context_switch(register_t * p_regs, context_t * n_regs) {
 
     // Switch page directory
     if(((page_directory_t*)n_regs->cr3) != NULL) {
-        uint32_t t = virtual2phys(kpage_dir, kpage_dir);
-        switch_page_directory(t, 1);
+        //uint32_t t = virtual2phys(kpage_dir, kpage_dir);
+        //switch_page_directory(t, 1);
         switch_page_directory((page_directory_t*)n_regs->cr3, 1);
     }
     // Load regs(memory) to the real registers
@@ -84,7 +84,7 @@ void schedule() {
 
     current_process = next;
     if(current_process == NULL)
-        PANIC("no process left, did you exit all user process ??? not cool man, never exit the userspace init process!!");
+        PANIC("no process left, did you exit all user process ??? Never exit the userspace init process!!!!");
     context_switch(saved_context, &next->regs);
 }
 
@@ -117,9 +117,9 @@ void create_process(char * filename) {
 
     // Create an address space for the process, how ?
     // kmalloc a page directory for the process, then copy the entire kernel page dirs and tables(the frames don't have to be copied though)
-    p1->page_dir = kmalloc_a(sizeof(page_directory_t));
+    p1->page_dir = (void*)kmalloc_a(sizeof(page_directory_t));
     memset(p1->page_dir, 0, sizeof(page_directory_t));
-    copy_page_table(p1->page_dir, kpage_dir);
+    copy_page_directory(p1->page_dir, kpage_dir);
     p1->regs.cr3 = (uint32_t)virtual2phys(kpage_dir, p1->page_dir);
 
     uint32_t kdebug = (uint32_t)virtual2phys(kpage_dir, (void*)0xc010253a);

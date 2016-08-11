@@ -71,14 +71,14 @@ void simple_test() {
     uint32_t t1 = first_free_block();
     printf("first free block is %u\n", t1);
 
-    void * ret = allocate_block();
+    void * ret = (void*)allocate_block();
     printf("first allocated block addr 0x%p\n", ret);
 
 
     uint32_t t2 = first_free_block();
     printf("second free block is %u\n", t2);
 
-    ret = allocate_block();
+    ret = (void*)allocate_block();
     printf("second allocated block addr 0x%p\n", ret);
 
     free_block(t2);

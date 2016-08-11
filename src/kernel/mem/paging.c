@@ -58,7 +58,7 @@ void * dumb_kmalloc(uint32_t size, int align) {
  * Allocate a frame from pmm, write frame number to the page structure
  * You may notice that we've set the both the PDE and PTE as user-accessible with r/w permissions, because..... we don't care security
  * */
-void allocate_page(page_directory_t * dir, uint32_t virtual_addr, int is_kernel, int is_writable) {
+void allocate_page(page_directory_t * dir, uint32_t virtual_addr, uint32_t frame, int is_kernel, int is_writable) {
     page_table_t * table = NULL;
     if(!dir) {
         printf("allocate_page: page directory is empty\n");
@@ -95,7 +95,12 @@ void allocate_page(page_directory_t * dir, uint32_t virtual_addr, int is_kernel,
 
     // If the coressponding page does not exist, allocate_block!
     if(!table->pages[page_tbl_idx].present) {
-        uint32_t t = allocate_block();
+        uint32_t t;
+        // Normally, we'll allocate frames from physical memory manager, but sometimes it's useful to be able to set any frame(for example, share memory between process)
+        if(frame)
+            t = frame;
+        else
+            t = allocate_block();
         table->pages[page_tbl_idx].frame = t;
         table->pages[page_tbl_idx].present = 1;
         table->pages[page_tbl_idx].rw = 1;
@@ -106,8 +111,11 @@ void allocate_page(page_directory_t * dir, uint32_t virtual_addr, int is_kernel,
 /*
  * Find the corresponding page table entry, and set frame to 0
  * Also, clear corresponding bit in pmm bitmap
+ * @parameter free:
+ *      0: only clear the page table entry, don't actually free the frame
+ *      1 : free the frame
  * */
-void free_page(page_directory_t * dir, uint32_t virtual_addr) {
+void free_page(page_directory_t * dir, uint32_t virtual_addr, int free) {
     if(dir == TEMP_PAGE_DIRECTORY) return;
     uint32_t page_dir_idx = PAGEDIR_INDEX(virtual_addr), page_tbl_idx = PAGETBL_INDEX(virtual_addr);
     if(!dir->ref_tables[page_dir_idx]) {
@@ -120,7 +128,8 @@ void free_page(page_directory_t * dir, uint32_t virtual_addr) {
         return;
     }
     // The table entry is found !
-    free_block(table->pages[page_tbl_idx].frame);
+    if(free)
+        free_block(table->pages[page_tbl_idx].frame);
     table->pages[page_tbl_idx].present = 0;
     table->pages[page_tbl_idx].frame = 0;
 }
@@ -144,13 +153,13 @@ void paging_init() {
     // Now, map 4mb begining from 0xC0000000 to 0xC0400000(should corresponding to first 1024 physical blocks, so MAKE SURE pmm bitmap is all clear at this point)
     uint32_t i = LOAD_MEMORY_ADDRESS;
     while(i < LOAD_MEMORY_ADDRESS + 4 * M) {
-        allocate_page(kpage_dir, i, 1, 1);
+        allocate_page(kpage_dir, i, 0, 1, 1);
         i = i + PAGE_SIZE;
     }
     // Map some memory after 0xc0400000 as kernel heeap ? do it later.
     i = LOAD_MEMORY_ADDRESS + 4 * M;
     while(i < LOAD_MEMORY_ADDRESS + 4 * M + KHEAP_INITIAL_SIZE) {
-        allocate_page(kpage_dir, i, 1, 1);
+        allocate_page(kpage_dir, i, 0, 1, 1);
         i = i + PAGE_SIZE;
     }
 
@@ -219,7 +228,7 @@ restart_sbrk:
             //      a) expand the heap by getting more pages
             runner = heap_end;
             while(runner < new_boundary) {
-                allocate_page(kpage_dir, (uint32_t)runner, 1, 1);
+                allocate_page(kpage_dir, (uint32_t)runner, 0, 1, 1);
                 runner = runner +  PAGE_SIZE;
             }
             // Put away the page table first, then sbrk user-requested data again
@@ -238,7 +247,7 @@ restart_sbrk:
         }
         runner = heap_end - PAGE_SIZE;
         while(runner > new_boundary) {
-            free_page(kpage_dir, (uint32_t)runner);
+            free_page(kpage_dir, (uint32_t)runner, 1);
             runner = runner - PAGE_SIZE;
         }
         heap_end = runner + PAGE_SIZE;
@@ -262,44 +271,46 @@ void copy_page_directory(page_directory_t * dst, page_directory_t * src) {
         }
         else {
             // For non-kernel pages, copy the pages (for example, when forking process, you don't want the parent process mess with child process's memory)
-            uint32_t phys;
-            dst->ref_tables[i] = copy_page_table(dst, src->ref_tables[i], &phys);
-            dst->tables[i] = phys;
-            dst.user = 1;
-            dst.rw = 1;
-            dst.present = 1;
+            dst->ref_tables[i] = copy_page_table(src, dst, i, src->ref_tables[i]);
+            uint32_t phys = (uint32_t)virtual2phys(src, dst->ref_tables[i]);
+            dst->tables[i].frame = phys >> 12;
+            dst->tables[i].user = 1;
+            dst->tables[i].rw = 1;
+            dst->tables[i].present = 1;
         }
     }
 }
 /*
  * Copy a page directory
  * */
-page_table_t * copy_page_table(page_directory_t * page_dir, uint32_t page_dir_idx, page_table_t * src,  uint32_t * phys) {
+page_table_t * copy_page_table(page_directory_t * src_page_dir, page_directory_t * dst_page_dir, uint32_t page_dir_idx, page_table_t * src) {
     page_table_t * table = (page_table_t*)kmalloc_a(sizeof(page_table_t));
     for(int i = 0; i < 1024; i++) {
         if(!table->pages[i].frame)
             continue;
-        // OK, now copy this frame! but.... we only know the frame number. we can (a) disable paging and just simply move data over, or (b) figure out the virtual address and then do memcpy
-        // let's go for option (b)
-        // we know page dir index, we know page table index, and we know that the page offset is always 0. Ok that's everything we need to construct a virtual address
-        uint32_t virtual_address = (page_dir_idx << 22) | (i << 12) | (0);
-        allocate_page(page_dir, virtual_address, 0, 1);
+        // Source frame's virtual address
+        uint32_t src_virtual_address = (page_dir_idx << 22) | (i << 12) | (0);
+        // Destination frame's virtual address
+        uint32_t dst_virtual_address = src_virtual_address;
+        // Temporary virtual address in current virtual address space
+        uint32_t tmp_virtual_address = 0;
+
+        // Allocate a frame in destination page table
+        allocate_page(dst_page_dir, dst_virtual_address, 0, 0, 1);
+        // Now I want tmp_virtual_address and dst_virtual_address both points to the same frame
+        allocate_page(src_page_dir, tmp_virtual_address, (uint32_t)virtual2phys(dst_page_dir, (void*)dst_virtual_address), 0, 1);
         if (src->pages[i].present) table->pages[i].present = 1;
         if (src->pages[i].rw)      table->pages[i].rw = 1;
         if (src->pages[i].user)    table->pages[i].user = 1;
         if (src->pages[i].accessed)table->pages[i].accessed = 1;
         if (src->pages[i].dirty)   table->pages[i].dirty = 1;
-        // Something wrong with this !!!!!!!!
-        memcpy(virtual_address);
+        memcpy((void*)tmp_virtual_address, (void*)src_virtual_address, PAGE_SIZE);
+        // Unlink frame
+        free_page(src_page_dir, tmp_virtual_address, 0);
     }
+    return table;
 }
 
-/*
- * Copy a page(or frame if you like)
- * */
-void copy_page() {
-
-}
 
 /* Print out useful information when a page fault occur
  * */

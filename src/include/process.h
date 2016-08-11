@@ -9,6 +9,7 @@
 #include <isr.h>
 #include <math.h>
 #include <vfs.h>
+#include <string.h>
 
 #define SCHED_TOLERANCE 5
 

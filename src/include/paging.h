@@ -81,9 +81,9 @@ void * virtual2phys(page_directory_t * dir, void * virtual_addr);
 
 void * dumb_kmalloc(uint32_t size, int align);
 
-void allocate_page(page_directory_t * dir, uint32_t virtual_addr, int is_kernel, int is_writable);
+void allocate_page(page_directory_t * dir, uint32_t virtual_addr, uint32_t frame, int is_kernel, int is_writable);
 
-void free_page(page_directory_t * dir, uint32_t virtual_addr);
+void free_page(page_directory_t * dir, uint32_t virtual_addr, int free);
 
 void paging_init();
 
@@ -93,7 +93,9 @@ void enable_paging();
 
 void * ksbrk(int size);
 
-void copy_page_table(page_directory_t * dst, page_directory_t * src);
+void copy_page_directory(page_directory_t * dst, page_directory_t * src);
+
+page_table_t * copy_page_table(page_directory_t * src_page_dir, page_directory_t * dst_page_dir, uint32_t page_dir_idx, page_table_t * src);
 
 void page_fault_handler(register_t * reg);
 #endif
