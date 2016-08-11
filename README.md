@@ -1,9 +1,12 @@
 # simpleos
 A toy operating system based on <a href = "http://www.osdever.net/bkerndev/Docs/title.htm"> Brans' Kernel Development Tutorial</a>  
-Simpleos is commented heavily and is meant for studying purposes.  
-It is still under develop, and I just finished the filesystem part, simpleos is now able to manage a tree of directories, read/write files on a hard disk(vfs -> ext2 -> pci/dma hard disk driver)!  
-Next, I am going to implement multi-process.  
-Enjoy studying osdev.  
+In the near future, I will work on the following functionality  
+ - Multi-process/Multi-threading/Spinlock/Basic round robin scheduling algorithm
+ - Support elf(now support flat binary program)
+ - Write the 17 sys call necessary for porting c library (fork, exec, exit, open …..)
+ - Port newlib
+ - Start writing user space apps like env, rm, mkdir… etc
+ - I can’t wait to start coding GUI, but still need more time to build these basic infrastructure in order for a functional gui
 
 # How to run and test simpleos kernel
 
@@ -85,7 +88,7 @@ Now clone the repo to your vm and simply run ./compile.sh to compile the kernel,
 &#160; &#160; &#160; &#160;4 Write a file manager                                                   []  
 
 #### Miscellaneous  
-&#160; &#160; &#160; &#160;0 Kernel multi-tasking                                                   []  
+&#160; &#160; &#160; &#160;0 Kernel multi-tasking                                                   [In Progress]  
 &#160; &#160; &#160; &#160;1 Usermode                                                               [✔]  
 &#160; &#160; &#160; &#160;3 Executable loader(elf)                                                 [In Progress]  
 &#160; &#160; &#160; &#160;4 spinlock, mutex, and other pthread primitives                          []  

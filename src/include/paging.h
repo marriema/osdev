@@ -38,7 +38,6 @@ typedef struct page_dir_entry {
     unsigned int global     : 1;
     unsigned int available  : 3;
     unsigned int frame      : 20;
-
 }page_dir_entry_t;
 
 typedef struct page_table_entry {

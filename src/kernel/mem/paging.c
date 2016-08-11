@@ -95,11 +95,11 @@ void allocate_page(page_directory_t * dir, uint32_t virtual_addr, int is_kernel,
 
     // If the coressponding page does not exist, allocate_block!
     if(!table->pages[page_tbl_idx].present) {
-         uint32_t t = allocate_block();
-         table->pages[page_tbl_idx].frame = t;
-         table->pages[page_tbl_idx].present = 1;
-         table->pages[page_tbl_idx].rw = 1;
-         table->pages[page_tbl_idx].user = 1;
+        uint32_t t = allocate_block();
+        table->pages[page_tbl_idx].frame = t;
+        table->pages[page_tbl_idx].present = 1;
+        table->pages[page_tbl_idx].rw = 1;
+        table->pages[page_tbl_idx].user = 1;
     }
 }
 
@@ -238,8 +238,8 @@ restart_sbrk:
         }
         runner = heap_end - PAGE_SIZE;
         while(runner > new_boundary) {
-             free_page(kpage_dir, (uint32_t)runner);
-             runner = runner - PAGE_SIZE;
+            free_page(kpage_dir, (uint32_t)runner);
+            runner = runner - PAGE_SIZE;
         }
         heap_end = runner + PAGE_SIZE;
         goto update_boundary;
@@ -251,18 +251,56 @@ ret:
 }
 
 /*
- * Copy a page table
+ * Copy a page directory
  * */
-void copy_page_table(page_directory_t * dst, page_directory_t * src) {
+void copy_page_directory(page_directory_t * dst, page_directory_t * src) {
     for(uint32_t i = 0; i < 1024; i++) {
-        dst->tables[i] = src->tables[i];
-        dst->ref_tables[i] = src->ref_tables[i];
-        if(src->ref_tables[i]) {
-            dst->ref_tables[i] = kmalloc(sizeof(page_table_t));
-            memcpy(dst->ref_tables[i], src->ref_tables[i], sizeof(page_table_t));
+        if(kpage_dir->ref_tables[i] == src->ref_tables[i]) {
+            // Link kernel pages
+            dst->tables[i] = src->tables[i];
+            dst->ref_tables[i] = src->ref_tables[i];
+        }
+        else {
+            // For non-kernel pages, copy the pages (for example, when forking process, you don't want the parent process mess with child process's memory)
+            uint32_t phys;
+            dst->ref_tables[i] = copy_page_table(dst, src->ref_tables[i], &phys);
+            dst->tables[i] = phys;
+            dst.user = 1;
+            dst.rw = 1;
+            dst.present = 1;
         }
     }
 }
+/*
+ * Copy a page directory
+ * */
+page_table_t * copy_page_table(page_directory_t * page_dir, uint32_t page_dir_idx, page_table_t * src,  uint32_t * phys) {
+    page_table_t * table = (page_table_t*)kmalloc_a(sizeof(page_table_t));
+    for(int i = 0; i < 1024; i++) {
+        if(!table->pages[i].frame)
+            continue;
+        // OK, now copy this frame! but.... we only know the frame number. we can (a) disable paging and just simply move data over, or (b) figure out the virtual address and then do memcpy
+        // let's go for option (b)
+        // we know page dir index, we know page table index, and we know that the page offset is always 0. Ok that's everything we need to construct a virtual address
+        uint32_t virtual_address = (page_dir_idx << 22) | (i << 12) | (0);
+        allocate_page(page_dir, virtual_address, 0, 1);
+        if (src->pages[i].present) table->pages[i].present = 1;
+        if (src->pages[i].rw)      table->pages[i].rw = 1;
+        if (src->pages[i].user)    table->pages[i].user = 1;
+        if (src->pages[i].accessed)table->pages[i].accessed = 1;
+        if (src->pages[i].dirty)   table->pages[i].dirty = 1;
+        // Something wrong with this !!!!!!!!
+        memcpy(virtual_address);
+    }
+}
+
+/*
+ * Copy a page(or frame if you like)
+ * */
+void copy_page() {
+
+}
+
 /* Print out useful information when a page fault occur
  * */
 void page_fault_handler(register_t * reg) {
