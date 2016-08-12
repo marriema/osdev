@@ -85,7 +85,10 @@ int kmain(multiboot_info_t * mb_info) {
     asm volatile("mov %%esp, %0" : "=r"(esp));
     tss_set_stack(0x10, esp);
 
-    create_process("/test2.bin");
+    create_process("/test1.bin");
+
+
+
 
     set_curr_color(LIGHT_RED);
 

@@ -1,8 +1,7 @@
 #include <process.h>
 
-list_t * process_list;
-list_t * schedule_queue;
 
+list_t * process_list;
 pcb_t * current_process;
 pcb_t * last_process;
 
@@ -36,10 +35,15 @@ void context_switch(register_t * p_regs, context_t * n_regs) {
 
     // Switch page directory
     if(((page_directory_t*)n_regs->cr3) != NULL) {
+        //uint32_t t = virtual2phys(kpage_dir, kpage_dir);
+        //switch_page_directory(t, 1);
         switch_page_directory((page_directory_t*)n_regs->cr3, 1);
     }
     // Load regs(memory) to the real registers
-    regs_switch(n_regs);
+    if(current_process->state == TASK_CREATED || current_process->state == TASK_LOADING)
+        kernel_regs_switch(n_regs);
+    else if(current_process->state == TASK_RUNNING)
+        user_regs_switch(n_regs);
 }
 
 
@@ -47,16 +51,14 @@ void context_switch(register_t * p_regs, context_t * n_regs) {
  * This function is registered to the timer wakeup list, so it will be wakeup every 2/18 seconds
  * */
 void schedule() {
-    tcb_t * t;
     printf("Process Scheduler running\n");
     pcb_t * next;
-    if(!list_size(schedule_queue)) return;
+    if(!list_size(process_list)) return;
 
     if(!current_process) {
         // First process, this will only happen when we create the user entry process, we'll make sure this first process never exits
         prev_jiffies = jiffies;
-        t = list_peek_front(schedule_queue);
-        current_process = t->parent;
+        current_process = list_peek_front(process_list);
         last_process = NULL;
         context_switch(NULL, &current_process->regs);
     }
@@ -65,7 +67,7 @@ void schedule() {
     listnode_t * nextnode = (current_process->self)->next;
     if(current_process->state == TASK_ZOMBIE) {
         // Make sure we won't choose a zombie process to be run next
-        list_remove_node(schedule_queue, current_process->self);
+        list_remove_node(process_list, current_process->self);
         last_process = NULL;
     }
     else {
@@ -79,7 +81,7 @@ void schedule() {
 
     // choose next process
     if(!nextnode)
-        next = list_peek_front(schedule_queue);
+        next = list_peek_front(process_list);
     else
         next = nextnode->val;
 
@@ -89,45 +91,41 @@ void schedule() {
     context_switch(saved_context, &next->regs);
 }
 
+
 /*
  * Create a new process, load a program from filesystem and run it
  * */
 void create_process(char * filename) {
     // Create and insert a process, the pcb struct is in kernel space
     pcb_t * p1 = kcalloc(sizeof(pcb_t), 1);
-    p1->threads = list_create();
-    tcb_t * main_thread = kcalloc(sizeof(tcb_t), 1);
-    list_insert_front(p1->threads, main_thread);
-
-    p1->state = TASK_CREATED;
     p1->pid = allocate_pid();
+    p1->regs.eip = (uint32_t)do_elf_load;
+    p1->regs.eflags = 0x206; // enable interrupt
+    p1->self = list_insert_front(process_list, p1);
     strcpy(p1->filename, filename);
-    main_thread->regs.eip = (uint32_t)executable_loader;
-    main_thread->regs.eflags = 0x206; // enable interrupt(PF, IF)
-    main_thread->self = list_insert_front(schedule_queue, main_thread);
-    main_thread->stack = (void*)USER_STACK; // assuming one thread per process
-    main_thread->regs.esp = (uint32_t)p1->stack;
-    main_thread->regs.ebp = main_thread->regs.esp;
-    main_thread->parent = p1;
+
+    // 4kb initial stack
+    p1->stack = (void*)0xC0000000;
+    p1->regs.esp = (0xC0000000 - 4 * 1024);
 
     // Create an address space for the process, how ?
-    // kmalloc a page directory for the process, then copy(link) the entire kernel page dirs and tables(the frames don't have to be copied though)
+    // kmalloc a page directory for the process, then copy the entire kernel page dirs and tables(the frames don't have to be copied though)
     p1->page_dir = (void*)kmalloc_a(sizeof(page_directory_t));
     memset(p1->page_dir, 0, sizeof(page_directory_t));
     copy_page_directory(p1->page_dir, kpage_dir);
     p1->regs.cr3 = (uint32_t)virtual2phys(kpage_dir, p1->page_dir);
+    p1->state = TASK_CREATED;
 
     // Now, the process has its own address space, stack,
     // schedule
     asm volatile("mov $1, %eax");
     asm volatile("int $0x80");
-
 }
 /*
  * Init process scheduler
  * */
 void process_init() {
-    schedule_queue = list_create();
+    process_list = list_create();
     // Tell the timer to call our process_scheduler every 2/18 seconds
     register_wakeup_call(schedule, 30.0/hz);
 }

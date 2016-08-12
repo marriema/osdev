@@ -55,6 +55,18 @@ void * dumb_kmalloc(uint32_t size, int align) {
 }
 
 /*
+ * Allocate a set of pages specified by the region
+ * */
+void allocate_region(page_directory_t * dir, uint32_t start_va, uint32_t end_va, int is_kernel, int is_writable) {
+    uint32_t start = start_va & 0xfffff000;
+    uint32_t end = end_va & 0xfffff000;
+    while(start <= end) {
+        allocate_page(dir, start, 0, is_kernel, is_writable);
+        start = start + PAGE_SIZE;
+    }
+}
+
+/*
  * Allocate a frame from pmm, write frame number to the page structure
  * You may notice that we've set the both the PDE and PTE as user-accessible with r/w permissions, because..... we don't care security
  * */
