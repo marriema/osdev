@@ -10,9 +10,10 @@
 #include <math.h>
 #include <vfs.h>
 #include <string.h>
+#include <list.h>
 
 #define SCHED_TOLERANCE 5
-
+#define USER_STACK LOAD_MEMORY_ADDRESS
 // All possible process state, copied from sched.h
 #define TASK_RUNNING            0
 #define TASK_INTERRUPTIBLE      1
@@ -38,16 +39,15 @@ typedef struct context {
 }context_t;
 
 typedef struct pcb {
-    context_t regs;
-    pid_t pid;
+    char filename[512];
     listnode_t * self;
-    void * stack;
+    pid_t pid;
     uint32_t state;
-    uint32_t time_slice;
     page_directory_t * page_dir;
+    list_t * threads;
 }pcb_t;
 
-extern list_t * process_list;
+extern list_t * schedule_queue;
 extern pcb_t * current_process;
 extern register_t * saved_context;
 

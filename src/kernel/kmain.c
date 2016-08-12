@@ -87,9 +87,6 @@ int kmain(multiboot_info_t * mb_info) {
 
     create_process("/test2.bin");
 
-
-
-
     set_curr_color(LIGHT_RED);
 
     printf("\nDone!\n");

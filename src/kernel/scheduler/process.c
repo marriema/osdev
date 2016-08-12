@@ -1,7 +1,8 @@
 #include <process.h>
 
-
 list_t * process_list;
+list_t * schedule_queue;
+
 pcb_t * current_process;
 pcb_t * last_process;
 
@@ -35,8 +36,6 @@ void context_switch(register_t * p_regs, context_t * n_regs) {
 
     // Switch page directory
     if(((page_directory_t*)n_regs->cr3) != NULL) {
-        //uint32_t t = virtual2phys(kpage_dir, kpage_dir);
-        //switch_page_directory(t, 1);
         switch_page_directory((page_directory_t*)n_regs->cr3, 1);
     }
     // Load regs(memory) to the real registers
@@ -48,14 +47,16 @@ void context_switch(register_t * p_regs, context_t * n_regs) {
  * This function is registered to the timer wakeup list, so it will be wakeup every 2/18 seconds
  * */
 void schedule() {
+    tcb_t * t;
     printf("Process Scheduler running\n");
     pcb_t * next;
-    if(!list_size(process_list)) return;
+    if(!list_size(schedule_queue)) return;
 
     if(!current_process) {
         // First process, this will only happen when we create the user entry process, we'll make sure this first process never exits
         prev_jiffies = jiffies;
-        current_process = list_peek_front(process_list);
+        t = list_peek_front(schedule_queue);
+        current_process = t->parent;
         last_process = NULL;
         context_switch(NULL, &current_process->regs);
     }
@@ -64,7 +65,7 @@ void schedule() {
     listnode_t * nextnode = (current_process->self)->next;
     if(current_process->state == TASK_ZOMBIE) {
         // Make sure we won't choose a zombie process to be run next
-        list_remove_node(process_list, current_process->self);
+        list_remove_node(schedule_queue, current_process->self);
         last_process = NULL;
     }
     else {
@@ -78,7 +79,7 @@ void schedule() {
 
     // choose next process
     if(!nextnode)
-        next = list_peek_front(process_list);
+        next = list_peek_front(schedule_queue);
     else
         next = nextnode->val;
 
@@ -92,50 +93,41 @@ void schedule() {
  * Create a new process, load a program from filesystem and run it
  * */
 void create_process(char * filename) {
-    vfs_node_t * program = file_open(filename, 0);
-    if(!program) {
-        printf("Fail to open %s, does it even exist?\n", filename);
-        return;
-    }
-    uint32_t size = vfs_get_file_size(program);
-    char * program_code = kcalloc(size, 1);
-    vfs_read(program, 0, size, program_code);
-
     // Create and insert a process, the pcb struct is in kernel space
     pcb_t * p1 = kcalloc(sizeof(pcb_t), 1);
-    p1->pid = allocate_pid();
-    // Right now, program code is placed in kernel space, which is weird.. should be put in user space, also this whole program loading thing should be done after user addr space is created
-    // but now just place in randomly in kernel space
-    p1->regs.eip = (uint32_t)program_code;
-    p1->regs.eflags = 0x206; // enable interrupt
-    p1->time_slice = 50;
-    p1->self = list_insert_front(process_list, p1);
+    p1->threads = list_create();
+    tcb_t * main_thread = kcalloc(sizeof(tcb_t), 1);
+    list_insert_front(p1->threads, main_thread);
 
-    // Create a 2mb stack for the new process
-    p1->stack = kmalloc(2 * 1024 * 1024);
-    p1->regs.esp = (uint32_t)p1->stack + 2 * 1024 * 1024; // wait, will schedule() load this stack ? or the one set in tss ?
+    p1->state = TASK_CREATED;
+    p1->pid = allocate_pid();
+    strcpy(p1->filename, filename);
+    main_thread->regs.eip = (uint32_t)executable_loader;
+    main_thread->regs.eflags = 0x206; // enable interrupt(PF, IF)
+    main_thread->self = list_insert_front(schedule_queue, main_thread);
+    main_thread->stack = (void*)USER_STACK; // assuming one thread per process
+    main_thread->regs.esp = (uint32_t)p1->stack;
+    main_thread->regs.ebp = main_thread->regs.esp;
+    main_thread->parent = p1;
 
     // Create an address space for the process, how ?
-    // kmalloc a page directory for the process, then copy the entire kernel page dirs and tables(the frames don't have to be copied though)
+    // kmalloc a page directory for the process, then copy(link) the entire kernel page dirs and tables(the frames don't have to be copied though)
     p1->page_dir = (void*)kmalloc_a(sizeof(page_directory_t));
     memset(p1->page_dir, 0, sizeof(page_directory_t));
     copy_page_directory(p1->page_dir, kpage_dir);
     p1->regs.cr3 = (uint32_t)virtual2phys(kpage_dir, p1->page_dir);
 
-    uint32_t kdebug = (uint32_t)virtual2phys(kpage_dir, (void*)0xc010253a);
-    uint32_t debug = (uint32_t)virtual2phys(p1->page_dir, (void*)0xc010253a);
-    printf("eip in kernel page dir is %u, in user page dir is %u\n", kdebug, debug);
-
     // Now, the process has its own address space, stack,
     // schedule
     asm volatile("mov $1, %eax");
     asm volatile("int $0x80");
+
 }
 /*
  * Init process scheduler
  * */
 void process_init() {
-    process_list = list_create();
+    schedule_queue = list_create();
     // Tell the timer to call our process_scheduler every 2/18 seconds
     register_wakeup_call(schedule, 30.0/hz);
 }
