@@ -55,14 +55,19 @@ void do_elf_load() {
             // Load segment data
             memcpy((void*)seg_begin, file + prgm_head->p_offset, prgm_head->p_filesz);
             // Fill zeros in the region [filesz, memsz]
-            memset((void*)(seg_begin + prgm_head->p_filesz), 0, prgm_head->p_memsz);
+            memset((void*)(seg_begin + prgm_head->p_filesz), 0, prgm_head->p_memsz - prgm_head->p_filesz);
+            // If this is the code segment
+            if(prgm_head->p_flags == PF_X + PF_R + PF_W || prgm_head->p_flags == PF_X + PF_R) {
+                 current_process->regs.eip = head->e_entry + seg_begin;
+            }
         }
+        prgm_head++;
     }
 
     // Setup stack and eip again
+    allocate_page(current_process->page_dir, 0xC0000000 - 0x1000, 0, 0, 1);
     current_process->regs.esp = 0xC0000000;
     current_process->regs.ebp = current_process->regs.ebp;
-    current_process->regs.eip = head->e_entry;
     // Ready to run
     current_process->state = TASK_RUNNING;
     // Schedule

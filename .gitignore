@@ -8,6 +8,8 @@
 # Ignore kernel executable
 os_kernel
 
+# Ignore file produced by gdb
+# dump.bin
 
 # Ignore bochs output
 bochsout.txt

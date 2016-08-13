@@ -84,7 +84,16 @@ int kmain(multiboot_info_t * mb_info) {
     uint32_t esp;
     asm volatile("mov %%esp, %0" : "=r"(esp));
     tss_set_stack(0x10, esp);
-
+/*
+    vfs_node_t * f = file_open("/fs_test", 0);
+    if(!f) {
+         printf("fs_test not exists\n");
+         return 0;
+    }
+    uint32_t size = vfs_get_file_size(f);
+    char * fs_test = kmalloc(size);
+    vfs_read(f, 0, size, fs_test);
+*/
     create_process("/test1.bin");
 
 

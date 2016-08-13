@@ -34,6 +34,11 @@
 #define PT_LOPROC  0x70000000
 #define PT_HIPROC  0x7fffffff
 
+/* p_flags */
+#define PF_X    0x1
+#define PF_W    0x2
+#define PF_R    0x4
+
 typedef uint16_t Elf32_Half;    // Unsigned half int
 typedef uint32_t Elf32_Off;     // Unsigned offset
 typedef uint32_t Elf32_Addr;    // Unsigned address

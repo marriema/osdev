@@ -70,14 +70,6 @@ void schedule() {
         list_remove_node(process_list, current_process->self);
         last_process = NULL;
     }
-    else {
-        // Take a look at current process's time slice, compare it with jiffies - prev_jiffies, if the abs(time_slice, jiffies - prev_jiffies) <= some number, switch to next process
-        int cmp = jiffies - prev_jiffies;
-        int slice = current_process->time_slice;
-        // otherwise, we'll keep current process running
-        if(current_process->state != TASK_ZOMBIE && abs(cmp - slice) > SCHED_TOLERANCE)
-           return;
-    }
 
     // choose next process
     if(!nextnode)

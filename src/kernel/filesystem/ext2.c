@@ -463,7 +463,7 @@ uint32_t read_inode_filedata(ext2_fs_t * ext2fs, inode_t * inode, uint32_t offse
     uint32_t i = start_block;
     uint32_t curr_off = 0;
     while(i <= end_block) {
-        uint32_t left = 0, right = ext2fs->block_size;
+        uint32_t left = 0, right = ext2fs->block_size - 1;
         char * block_buf = read_inode_block(ext2fs, inode, i);
         if(i == start_block)
             left = start_off;
