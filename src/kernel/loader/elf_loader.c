@@ -51,7 +51,7 @@ void do_elf_load() {
             seg_begin = prgm_head->p_vaddr;
             seg_end= seg_begin + prgm_head->p_memsz;
             // allocate this region
-            allocate_region(current_process->page_dir, seg_begin, seg_end, 0, 1);
+            allocate_region(current_process->page_dir, seg_begin, seg_end, 0, 0, 1);
             // Load segment data
             memcpy((void*)seg_begin, file + prgm_head->p_offset, prgm_head->p_filesz);
             // Fill zeros in the region [filesz, memsz]

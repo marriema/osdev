@@ -57,11 +57,14 @@ void * dumb_kmalloc(uint32_t size, int align) {
 /*
  * Allocate a set of pages specified by the region
  * */
-void allocate_region(page_directory_t * dir, uint32_t start_va, uint32_t end_va, int is_kernel, int is_writable) {
+void allocate_region(page_directory_t * dir, uint32_t start_va, uint32_t end_va, int iden_map, int is_kernel, int is_writable) {
     uint32_t start = start_va & 0xfffff000;
     uint32_t end = end_va & 0xfffff000;
     while(start <= end) {
-        allocate_page(dir, start, 0, is_kernel, is_writable);
+        if(iden_map)
+            allocate_page(dir, start, start / PAGE_SIZE, is_kernel, is_writable);
+        else
+            allocate_page(dir, start, 0, is_kernel, is_writable);
         start = start + PAGE_SIZE;
     }
 }
@@ -117,6 +120,18 @@ void allocate_page(page_directory_t * dir, uint32_t virtual_addr, uint32_t frame
         table->pages[page_tbl_idx].present = 1;
         table->pages[page_tbl_idx].rw = 1;
         table->pages[page_tbl_idx].user = 1;
+    }
+}
+
+/*
+ * Free all frames within the region
+ * */
+void free_region(page_directory_t * dir, uint32_t start_va, uint32_t end_va, int free) {
+    uint32_t start = start_va & 0xfffff000;
+    uint32_t end = end_va & 0xfffff000;
+    while(start <= end) {
+        free_page(dir, start, 1);
+        start = start + PAGE_SIZE;
     }
 }
 

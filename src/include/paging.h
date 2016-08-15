@@ -81,9 +81,11 @@ void * virtual2phys(page_directory_t * dir, void * virtual_addr);
 
 void * dumb_kmalloc(uint32_t size, int align);
 
-void allocate_region(page_directory_t * dir, uint32_t start_va, uint32_t end_va, int is_kernel, int is_writable);
+void allocate_region(page_directory_t * dir, uint32_t start_va, uint32_t end_va, int iden_map, int is_kernel, int is_writable);
 
 void allocate_page(page_directory_t * dir, uint32_t virtual_addr, uint32_t frame, int is_kernel, int is_writable);
+
+void free_region(page_directory_t * dir, uint32_t start_va, uint32_t end_va, int free);
 
 void free_page(page_directory_t * dir, uint32_t virtual_addr, int free);
 

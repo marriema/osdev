@@ -4,7 +4,7 @@ gdt_entry_t gdt_entries[NUM_DESCRIPTORS];
 gdt_ptr_t   gdt_ptr;
 
 void gdt_init() {
-    gdt_ptr.limit = sizeof(gdt_entries);
+    gdt_ptr.limit = sizeof(gdt_entries) - 1;
     gdt_ptr.base = (uint32_t)gdt_entries;
 
     // NULL Segment, required

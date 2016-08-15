@@ -1,6 +1,10 @@
 #ifndef SYSTEM_H
 #define SYSTEM_H
 
+// Some useful macro
+#define ALIGN(x,a)              __ALIGN_MASK(x,(typeof(x))(a)-1)
+#define __ALIGN_MASK(x,mask)    (((x)+(mask))&~(mask))
+
 // Define some constants that (almost) all other modules need
 #define PANIC(msg) panic(msg, __FILE__, __LINE__)
 #define ASSERT(b) ((b) ? (void)0 : panic(#b, __FILE__, __LINE__))
@@ -17,9 +21,35 @@
 #define G (1024*M)
 
 #define KDEBUG 1
+
 typedef unsigned int uint32_t ;
 typedef unsigned short uint16_t;
 typedef unsigned char uint8_t;
+
+// Register structs for interrupt/exception
+typedef struct registers
+{
+    uint32_t ds;
+    uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;
+    uint32_t int_no, err_code;
+    uint32_t eip, cs, eflags, useresp, ss;
+}register_t;
+
+// Register structs for bios service
+typedef struct registers16 {
+    uint16_t di;
+    uint16_t si;
+    uint16_t bp;
+    uint16_t sp;
+    uint16_t bx;
+    uint16_t dx;
+    uint16_t cx;
+    uint16_t ax;
+    uint16_t fs;
+    uint16_t es;
+    uint16_t ds;
+    uint16_t eflags;
+}registers16_t;
 
 // Defined in port_io.c
 void outportb(uint16_t port, uint8_t val);
