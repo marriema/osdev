@@ -59,6 +59,10 @@ protected_mode_16:use16
     mov gs, ax
     mov ss, ax
 
+    ; Set interrupt number
+    lea edi, [REBASE(int_num)]
+    stosb
+
     ; Turn off protected mode
     mov eax, cr0
     and  al,  ~0x01
@@ -67,7 +71,7 @@ protected_mode_16:use16
 real_mode_16:use16
     ; opcode for int
     db 0xCD
-asm_intnum_ptr:
+int_num:
     ; put the actual interrupt number here
     db 0x00
     mov eax, cr0
@@ -108,4 +112,6 @@ asm_idt_ptr:
     dd 0x00000000
 asm_reg_ptr:
     resw 12
+asm_intnum_ptr:
+    dd 0x00000000
 bios32_helper_end:

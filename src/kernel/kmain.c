@@ -26,15 +26,10 @@ extern ata_dev_t primary_master;
 
 #define MSIZE 48 * M
 
-void test_switch() {
-    printf("In test_switch\n");
-    // Yield
-    asm volatile("xchg %bx,%bx");
-    asm volatile("xchg %bx,%bx");
-    asm volatile("xchg %bx,%bx");
-    asm volatile("mov $1, %eax");
-    asm volatile("int $0x80");
-    for(;;);
+void test_bios32() {
+    register16_t reg = {0};
+    reg.ax = 0x13;
+    bios32_service(0x10, &reg);
 }
 
 int kmain(multiboot_info_t * mb_info) {
@@ -84,20 +79,10 @@ int kmain(multiboot_info_t * mb_info) {
     uint32_t esp;
     asm volatile("mov %%esp, %0" : "=r"(esp));
     tss_set_stack(0x10, esp);
-/*
-    vfs_node_t * f = file_open("/fs_test", 0);
-    if(!f) {
-         printf("fs_test not exists\n");
-         return 0;
-    }
-    uint32_t size = vfs_get_file_size(f);
-    char * fs_test = kmalloc(size);
-    vfs_read(f, 0, size, fs_test);
-*/
-    create_process("/test1.bin");
 
-
-
+    //create_process("/test1.bin");
+    bios32_init();
+    test_bios32();
 
     set_curr_color(LIGHT_RED);
 

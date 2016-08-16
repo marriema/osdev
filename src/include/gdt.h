@@ -2,7 +2,7 @@
 #define GDT_H
 #include <system.h>
 // Number of global descriptors
-#define NUM_DESCRIPTORS 6
+#define NUM_DESCRIPTORS 8
 
 // Gdt related structures
 typedef struct gdt_entry
@@ -27,5 +27,7 @@ extern void gdt_flush(uint32_t gdt_ptr);
 // gdt functions
 void gdt_init();
 void gdt_set_entry(int index, uint32_t base, uint32_t limit, uint8_t access, uint8_t gran);
+
+extern gdt_entry_t gdt_entries[NUM_DESCRIPTORS];
 
 #endif

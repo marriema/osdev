@@ -36,7 +36,7 @@ typedef struct registers
 }register_t;
 
 // Register structs for bios service
-typedef struct registers16 {
+typedef struct register16 {
     uint16_t di;
     uint16_t si;
     uint16_t bp;
@@ -49,7 +49,7 @@ typedef struct registers16 {
     uint16_t es;
     uint16_t ds;
     uint16_t eflags;
-}registers16_t;
+}register16_t;
 
 // Defined in port_io.c
 void outportb(uint16_t port, uint8_t val);
@@ -61,6 +61,9 @@ void outports(uint16_t _port, uint16_t _data);
 uint32_t inportl(uint16_t _port);
 void outportl(uint16_t _port, uint32_t _data);
 
+// Defined in bios32.c
+void bios32_init();
+void bios32_service(uint8_t int_num, register16_t * reg);
 
 // Defined in system.c
 void panic(const char *message, const char *file, uint32_t line);

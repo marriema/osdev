@@ -19,6 +19,11 @@ extern void * asm_idt_ptr;
 extern void * asm_reg_ptr;
 extern void * asm_intnum_ptr;
 
+void * new_gdt_entries;
+void * new_gdt_ptr;
+void * new_idt_ptr;
+void * new_reg_ptr;
+void * new_intnum_ptr;
 
 #define REBASE(x) (void*)(0x7c00 + (void*)x - (uint32_t)bios32_helper)
 /*
@@ -44,7 +49,7 @@ void bios32_init() {
  * need to move code to 0x7c00 for execution
  * the function that actually do all the mode switch and init work is in bios32_helper.asm (bios32_helper)
  * */
-void bios32_service(uint8_t int_num, register16_t * reg) {
+void bios32_service(uint32_t int_num, register16_t * reg) {
     void * new_code_base = (void*)0x7c00;
 
     // Identity map the first 64 kb of physical memory
@@ -54,14 +59,14 @@ void bios32_service(uint8_t int_num, register16_t * reg) {
     // And calculate the new address of these data so bios32_helper can reference them
     memcpy(&asm_gdt_entries, gdt_entries, sizeof(gdt_entries));
 
-    real_gdt_ptr.base = (uint32_t)REBASE((&asm_gdt_entries));
+    real_gdt_ptr.base = (uint32_t)new_gdt_entries;
     memcpy(&asm_gdt_ptr, &real_gdt_ptr, sizeof(real_gdt_ptr));
 
     memcpy(&asm_idt_ptr, &real_idt_ptr, sizeof(real_idt_ptr));
 
     memcpy(&asm_reg_ptr, reg, sizeof(register16_t));
 
-    memcpy(&asm_intnum_ptr, &int_num, sizeof(uint8_t));
+    memcpy(&asm_intnum_ptr, &int_num, sizeof(uint32_t));
 
     // Copy bios32_helper's code to [0x7c00, 0x8c00] (I hope this is enough space)
     uint32_t size = (uint32_t)bios32_helper_end - (uint32_t)bios32_helper;
