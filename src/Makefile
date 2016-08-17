@@ -2,7 +2,7 @@
 CC=i686-elf-gcc
 CFLAGS=-Wall -Wno-int-conversion -fstrength-reduce -fomit-frame-pointer -finline-functions -nostdlib -ffreestanding -I./include -std=gnu99 -g -ggdb -c
 NASM=nasm
-NASMFLAGS=-f elf32
+NASMFLAGS=-f elf32 -O0
 LDFLAGS=-T link.ld -ffreestanding -O2 -nostdlib -g -ggdb
 
 # Setup C/ASM SOURCES(Don't change the order of the following source file names! bad things can happen!)

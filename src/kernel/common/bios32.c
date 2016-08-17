@@ -16,7 +16,8 @@ extern void bios32_helper_end();
 extern void * asm_gdt_entries;
 extern void * asm_gdt_ptr;
 extern void * asm_idt_ptr;
-extern void * asm_reg_ptr;
+extern void * asm_in_reg_ptr;
+extern void * asm_out_reg_ptr;
 extern void * asm_intnum_ptr;
 
 
@@ -44,7 +45,7 @@ void bios32_init() {
  * need to move code to 0x7c00 for execution
  * the function that actually do all the mode switch and init work is in bios32_helper.asm (bios32_helper)
  * */
-void bios32_service(uint8_t int_num, register16_t * reg) {
+void bios32_service(uint8_t int_num, register16_t * in_reg, register16_t * out_reg) {
     void * new_code_base = (void*)0x7c00;
 
     // Identity map the first 64 kb of physical memory
@@ -59,8 +60,8 @@ void bios32_service(uint8_t int_num, register16_t * reg) {
 
     memcpy(&asm_idt_ptr, &real_idt_ptr, sizeof(real_idt_ptr));
 
-    memcpy(&asm_reg_ptr, reg, sizeof(register16_t));
-
+    memcpy(&asm_in_reg_ptr, in_reg, sizeof(register16_t));
+    void * t = REBASE(&asm_in_reg_ptr);
     memcpy(&asm_intnum_ptr, &int_num, sizeof(uint8_t));
 
     // Copy bios32_helper's code to [0x7c00, 0x8c00] (I hope this is enough space)
@@ -73,6 +74,16 @@ void bios32_service(uint8_t int_num, register16_t * reg) {
     // Now transfer control to bios32_helper, which basically does everything
     rebased_bios32_helper();
 
+    // Write bios interrupt result register to out_reg
+    // REBASE the asm_out_reg_ptr, memcpy!
+
+    t = REBASE(&asm_out_reg_ptr);
+    memcpy(out_reg, t, sizeof(register16_t));
+
     // Undo the identity mapping
     free_region(kpage_dir, 0x0, 0x10000, 1);
+    // Re-initialize the gdt and idt, otherwise bad thing will happen....
+    gdt_init();
+    idt_init();
 }
+

@@ -1,4 +1,7 @@
 ; A helper function for calling bios from protected mode
+; Execute bios interrupts under given context
+; Then Save the result context to a given address
+
 [bits 32]
 
 global bios32_helper
@@ -7,7 +10,8 @@ global bios32_helper_end
 global asm_gdt_ptr
 global asm_gdt_entries
 global asm_idt_ptr
-global asm_reg_ptr
+global asm_in_reg_ptr
+global asm_out_reg_ptr
 global asm_intnum_ptr
 
 
@@ -33,6 +37,7 @@ PG_BIT_ON equ 0x80000000
 section .text
 bios32_helper: use32
     pusha
+    mov edx, esp
     ; Now in 32bit protected mode
     ; Disable interrupts
     cli
@@ -47,7 +52,10 @@ bios32_helper: use32
 
     ; Load new gdt
     lgdt [REBASE(asm_gdt_ptr)]
-    
+
+    ; Load idt
+    lidt [REBASE(asm_idt_ptr)]
+   
     jmp CODE16:REBASE(protected_mode_16)
 protected_mode_16:use16
     ; Now in 16bit protected mode
@@ -63,13 +71,87 @@ protected_mode_16:use16
     mov eax, cr0
     and  al,  ~0x01
     mov cr0, eax
+
     jmp 0x0:REBASE(real_mode_16)
 real_mode_16:use16
+    ; 16 bit real mode data segment
+    xor ax, ax
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
+    mov sp, 0x8c00
+
+    sti
+
+    ; ### Save current context ###
+    pusha
+    mov cx, ss
+    push cx
+    mov cx, gs
+    push cx
+    mov cx, fs
+    push cx
+    mov cx, es
+    push cx
+    mov cx, ds
+    push cx
+    pushf
+
+    mov ax, sp
+    mov edi, temp_esp
+    stosw
+
+    ; ### Load the given context from asm_in_reg_ptr ###
+    ; Temporaril change esp to asm_in_reg_ptr
+    mov esp, REBASE(asm_in_reg_ptr)
+
+    ; only use some general register from the given context
+    popa
+
+    ; set a new stack for bios interrupt
+    mov sp, 0x9c00
     ; opcode for int
     db 0xCD
 asm_intnum_ptr:
     ; put the actual interrupt number here
     db 0x00
+    ; ### Write current context to asm_out_reg_ptr ###
+    mov esp, REBASE(asm_out_reg_ptr)
+    add sp, 28
+
+    pushf
+    mov cx, ss
+    push cx
+    mov cx, gs
+    push cx
+    mov cx, fs
+    push cx
+    mov cx, es
+    push cx
+    mov cx, ds
+    push cx
+    pusha
+
+    ; ### Restore current context ###
+    mov esi, temp_esp
+    lodsw
+    mov sp, ax
+
+    popf
+    pop cx
+    mov ds, cx
+    pop cx
+    mov es, cx
+    pop cx
+    mov fs, cx
+    pop cx
+    mov gs, cx
+    pop cx
+    mov ss, cx
+    popa
+
     mov eax, cr0
     inc eax
     mov cr0, eax
@@ -81,15 +163,20 @@ protected_mode_32:use32
     mov fs, ax
     mov gs, ax
     mov ss, ax
-    ; Turn off paging
-    mov ecx, cr0
-    or ecx, PG_BIT_ON
-    mov cr0, ecx
+
     ; restore cr3
     mov cr3, ebx
 
-    call gdt_init
-    call idt_init
+    ; Turn on paging
+    mov ecx, cr0
+    or ecx, PG_BIT_ON
+    mov cr0, ecx
+    
+    ; restore esp
+    mov esp, edx
+
+    ;call gdt_init
+    ;call idt_init
     sti
     popa
     ret
@@ -106,6 +193,16 @@ asm_gdt_ptr:
 asm_idt_ptr:
     dd 0x00000000
     dd 0x00000000
-asm_reg_ptr:
-    resw 12
+asm_in_reg_ptr:
+    resw 14
+asm_out_reg_ptr:
+    dd 0xaaaaaaaa
+    dd 0xaaaaaaaa
+    dd 0xaaaaaaaa
+    dd 0xaaaaaaaa
+    dd 0xaaaaaaaa
+    dd 0xaaaaaaaa
+    dd 0xaaaaaaaa
+temp_esp:
+    dw 0x0000
 bios32_helper_end:

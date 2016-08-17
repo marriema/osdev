@@ -28,8 +28,11 @@ extern ata_dev_t primary_master;
 
 void test_bios32() {
     register16_t reg = {0};
-    reg.ax = 0x13;
-    bios32_service(0x10, &reg);
+    register16_t reg2 = {0};
+    reg.ax = 0x4f01;
+    reg.di = 0x9000;
+    bios32_service(0x10, &reg, &reg2);
+    print_reg16(&reg2);
 }
 
 int kmain(multiboot_info_t * mb_info) {
@@ -86,6 +89,7 @@ int kmain(multiboot_info_t * mb_info) {
 
     set_curr_color(LIGHT_RED);
 
+    printf("eax 0x%x\n", 0x3ff);
     printf("\nDone!\n");
     for(;;);
     return 0;

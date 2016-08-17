@@ -18,7 +18,8 @@ void vsprintf_helper(char * str, const char * format, uint32_t * pos, va_list ar
     char c;
     int sign, ival, sys;
     char buf[512];
-    unsigned int uval;
+    uint32_t uval;
+    uint32_t size;
 
     memset(buf, 0, 512);
 
@@ -32,6 +33,7 @@ void vsprintf_helper(char * str, const char * format, uint32_t * pos, va_list ar
                 case 'u':
                 case 'x':
                 case 'p':
+                    size = 8;
                     if(c == 'd' || c == 'u')
                         sys = 10;
                     else
@@ -43,6 +45,15 @@ void vsprintf_helper(char * str, const char * format, uint32_t * pos, va_list ar
                         uval = -ival;
                     }
                     itoa(buf, uval, sys);
+                    uint32_t len = strlen(buf);
+                    if(len < size) {
+                        for(uint32_t i = 0; i < size - len; i++) {
+                            buf[size - 1 - i] = buf[len - 1 - i];
+                        }
+                        for(uint32_t i = 0; i < size - len; i++) {
+                            buf[i] = '0';
+                        }
+                    }
                     if(c == 'd' && sign) {
                         if(str) {
                             *(str + *pos) = '-';

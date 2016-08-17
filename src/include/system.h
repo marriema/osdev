@@ -45,9 +45,12 @@ typedef struct register16 {
     uint16_t dx;
     uint16_t cx;
     uint16_t ax;
-    uint16_t fs;
-    uint16_t es;
+
     uint16_t ds;
+    uint16_t es;
+    uint16_t fs;
+    uint16_t gs;
+    uint16_t ss;
     uint16_t eflags;
 }register16_t;
 
@@ -63,9 +66,10 @@ void outportl(uint16_t _port, uint32_t _data);
 
 // Defined in bios32.c
 void bios32_init();
-void bios32_service(uint8_t int_num, register16_t * reg);
+void bios32_service(uint8_t int_num, register16_t * in_reg, register16_t * out_reg);
 
 // Defined in system.c
 void panic(const char *message, const char *file, uint32_t line);
-
+void print_reg(register_t * reg);
+void print_reg16(register16_t * reg);
 #endif
