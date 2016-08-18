@@ -11,6 +11,8 @@ void *memset(void * dst, char val, int n);
 
 uint16_t * memsetw(uint16_t *dest, uint16_t val, uint32_t count);
 
+uint16_t * memsetdw(uint32_t *dest, uint32_t val, uint32_t count);
+
 int strlen(const char * s);
 
 char *strncpy(char *destString, const char *sourceString,int maxLength);

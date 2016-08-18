@@ -11,7 +11,7 @@ SOURCES=$(ROOT_DIR)/kmain.c $(COMMON_DIR)/system.c $(COMMON_DIR)/string.c $(DT_D
 	$(COMMON_DIR)/port_io.c $(INTERRUPT_DIR)/exception.c $(INTERRUPT_DIR)/interrupt.c $(DRIVERS_DIR)/timer.c $(MEM_DIR)/pmm.c $(MEM_DIR)/paging.c\
 	$(MEM_DIR)/kheap.c $(DRIVERS_DIR)/pci.c $(DRIVERS_DIR)/ata.c $(DS_DIR)/list.c $(DS_DIR)/generic_tree.c\
 	$(FILESYSTEM_DIR)/vfs.c $(FILESYSTEM_DIR)/ext2.c $(SCHEDULER_DIR)/usermode.c $(DT_DIR)/tss.c $(SYSCALL_DIR)/syscall.c $(SCHEDULER_DIR)/process.c\
-	$(LOADER_DIR)/elf_loader.c $(SYSCALL_DIR)/_exit.c $(COMMON_DIR)/bios32.c
+	$(LOADER_DIR)/elf_loader.c $(SYSCALL_DIR)/_exit.c $(COMMON_DIR)/bios32.c $(DRIVERS_DIR)/vesa.c
 
 ASM_SOURCES=$(ROOT_DIR)/entry.asm $(DT_DIR)/idt_helper.asm $(DT_DIR)/gdt_helper.asm $(INTERRUPT_DIR)/exception_helper.asm \
 	$(INTERRUPT_DIR)/interrupt_helper.asm $(SCHEDULER_DIR)/usermode_helper.asm $(DT_DIR)/tss_helper.asm $(SCHEDULER_DIR)/context_switch.asm $(COMMON_DIR)/bios32_helper.asm

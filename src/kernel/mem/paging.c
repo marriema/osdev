@@ -198,6 +198,8 @@ void paging_init() {
 
     // Enable Paging (remember to set cr4 to disable 4mb pages too)
     enable_paging();
+    // Identity map the first
+    allocate_region(kpage_dir, 0x0, 0x10000, 1, 1, 1);
 }
 
 /*

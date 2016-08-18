@@ -64,10 +64,6 @@ void outports(uint16_t _port, uint16_t _data);
 uint32_t inportl(uint16_t _port);
 void outportl(uint16_t _port, uint32_t _data);
 
-// Defined in bios32.c
-void bios32_init();
-void bios32_service(uint8_t int_num, register16_t * in_reg, register16_t * out_reg);
-
 // Defined in system.c
 void panic(const char *message, const char *file, uint32_t line);
 void print_reg(register_t * reg);

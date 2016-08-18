@@ -175,8 +175,6 @@ protected_mode_32:use32
     ; restore esp
     mov esp, edx
 
-    ;call gdt_init
-    ;call idt_init
     sti
     popa
     ret

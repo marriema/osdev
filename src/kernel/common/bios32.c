@@ -1,27 +1,10 @@
-#include <gdt.h>
-#include <paging.h>
-#include <kheap.h>
-#include <system.h>
-#include <string.h>
-#include <gdt.h>
-#include <idt.h>
+#include <bios32.h>
 
 idt_ptr_t real_idt_ptr;
 idt_ptr_t real_gdt_ptr;
 
 void (*rebased_bios32_helper)() = (void*)0x7c00;
-extern void bios32_helper();
-extern void bios32_helper_end();
 
-extern void * asm_gdt_entries;
-extern void * asm_gdt_ptr;
-extern void * asm_idt_ptr;
-extern void * asm_in_reg_ptr;
-extern void * asm_out_reg_ptr;
-extern void * asm_intnum_ptr;
-
-
-#define REBASE(x) (void*)(0x7c00 + (void*)x - (uint32_t)bios32_helper)
 /*
  * Prepare some descriptors for calling bios service from protected mode
  * We're using the easiest method : switch to real mode to call bios temporarily
@@ -47,9 +30,6 @@ void bios32_init() {
  * */
 void bios32_service(uint8_t int_num, register16_t * in_reg, register16_t * out_reg) {
     void * new_code_base = (void*)0x7c00;
-
-    // Identity map the first 64 kb of physical memory
-    allocate_region(kpage_dir, 0x0, 0x10000, 1, 1, 1);
 
     // Copy relevant data to [0x8c00, ...] (gdt_entries, gdt_ptr, idt_ptr and so on)
     // And calculate the new address of these data so bios32_helper can reference them
@@ -80,8 +60,6 @@ void bios32_service(uint8_t int_num, register16_t * in_reg, register16_t * out_r
     t = REBASE(&asm_out_reg_ptr);
     memcpy(out_reg, t, sizeof(register16_t));
 
-    // Undo the identity mapping
-    free_region(kpage_dir, 0x0, 0x10000, 1);
     // Re-initialize the gdt and idt, otherwise bad thing will happen....
     gdt_init();
     idt_init();

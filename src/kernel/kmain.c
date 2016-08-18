@@ -19,6 +19,7 @@
 #include <usermode.h>
 #include <syscall.h>
 #include <elf_loader.h>
+#include <vesa.h>
 
 
 extern uint8_t * bitmap;
@@ -84,8 +85,14 @@ int kmain(multiboot_info_t * mb_info) {
     tss_set_stack(0x10, esp);
 
     //create_process("/test1.bin");
-    bios32_init();
-    test_bios32();
+    //bios32_init();
+    //test_bios32();
+    vesa_init();
+    vesa_set_mode(0x118 | 0x4000);
+    void * t = vesa_get_lfb();
+    printf("The lfb is 0x%x\n", t);
+    allocate_region(kpage_dir, (uint32_t)t, (uint32_t)(t + 0x8000 * 10), 1,1,1);
+    vesa_memset_rgb(t, 0x00123456, 0x8000*10);
 
     set_curr_color(LIGHT_RED);
 
