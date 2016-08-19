@@ -81,22 +81,23 @@ Now clone the repo to your vm and simply run ./compile.sh to compile the kernel,
 &#160; &#160; &#160; &#160;3 Virtual Filesystem    [✔]  
 
 #### Graphical Interface  
-&#160; &#160; &#160; &#160;0 vesa driver, 1024 * 768 color(32-bit color)，framebuffer mode          []  
-&#160; &#160; &#160; &#160;1 Milestone(try loading and showing a wallpaper from hardisk!)           []  
+&#160; &#160; &#160; &#160;0 vesa driver, 1024 * 768 color(32-bit color)，framebuffer mode          [✔]  
+&#160; &#160; &#160; &#160;1 Milestone(try loading and showing a wallpaper from hardisk!)           [✔]  
 &#160; &#160; &#160; &#160;2 Windows compositor, windows, button, textbox, event-driven, etc.       []  
 &#160; &#160; &#160; &#160;3 Write a shell                                                          []  
 &#160; &#160; &#160; &#160;4 Write a file manager                                                   []  
 
 #### Miscellaneous  
-&#160; &#160; &#160; &#160;0 Kernel multi-tasking                                                   [In Progress]  
 &#160; &#160; &#160; &#160;1 Usermode                                                               [✔]  
-&#160; &#160; &#160; &#160;3 Executable loader(elf)                                                 [In Progress]  
-&#160; &#160; &#160; &#160;4 spinlock, mutex, and other pthread primitives                          []  
-&#160; &#160; &#160; &#160;5 Add more syscalls, like fork/exec, open, read, etc..                   []  
-&#160; &#160; &#160; &#160;7 Write or port some baisc utilities such asenv, rm, cp, mkdir, reboot   []  
-&#160; &#160; &#160; &#160;8 Time related stuff                                                     []  
-&#160; &#160; &#160; &#160;9 Kernel-module loading                                                  []  
-&#160; &#160; &#160; &#160;10 stadard input/output stuff                                            []  
+&#160; &#160; &#160; &#160;1 Multi-tasking/Simple scheduler                                         [In Progress]  
+&#160; &#160; &#160; &#160;2 Executable loader(elf)                                                 [In Progress]  
+&#160; &#160; &#160; &#160;3 spinlock, mutex, and other pthread primitives                          [In Progress]  
+&#160; &#160; &#160; &#160;4 Add more syscalls, like fork/exec, open, read, etc..                   [In Progress]  
+&#160; &#160; &#160; &#160;5 Port newlib                                                            [In Progress]  
+&#160; &#160; &#160; &#160;6 Write or port some baisc utilities such asenv, rm, cp, mkdir, reboot   []  
+&#160; &#160; &#160; &#160;7 Time related stuff                                                     []  
+&#160; &#160; &#160; &#160;8 Kernel-module loading                                                  []  
+&#160; &#160; &#160; &#160;9 stadard input/output stuff                                             []  
 
 #### Network protocols  
 &#160; &#160; &#160; &#160;0 TCP/IP                []  
