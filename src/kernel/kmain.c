@@ -20,6 +20,7 @@
 #include <syscall.h>
 #include <elf_loader.h>
 #include <vesa.h>
+#include <bitmap.h>
 
 
 extern uint8_t * bitmap;
@@ -90,13 +91,18 @@ int kmain(multiboot_info_t * mb_info) {
     vesa_init();
     vesa_set_mode(0x118 | 0x4000);
     void * t = vesa_get_lfb();
-    printf("The lfb is 0x%x\n", t);
-    allocate_region(kpage_dir, (uint32_t)t, (uint32_t)(t + 0x8000 * 10), 1,1,1);
-    vesa_memset_rgb(t, 0x00123456, 0x8000*10);
+    allocate_region(kpage_dir, (uint32_t)t, (uint32_t)(t + 1024*768*3), 1,1,1);
+
+    //vesa_memset_rgb((void*)0xfc000000, 0xaa33ff, 1024*768);
+
+    bitmap_t * bmp = bitmap_create("/wallpaper.bmp");
+    bitmap_display(bmp);
+
+
+    //vesa_memset_rgb(t, 0x00123456, 0x8000*10);
 
     set_curr_color(LIGHT_RED);
 
-    printf("eax 0x%x\n", 0x3ff);
     printf("\nDone!\n");
     for(;;);
     return 0;

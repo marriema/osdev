@@ -31,6 +31,12 @@ typedef struct mode_info_block {
   uint8_t  reserved1 [206];
 }mode_info_t;
 
+typedef struct uint24{
+    unsigned int integer: 24;
+}uint24_t;
+
+void vesa_memcpy24_32(uint24_t * dest, uint32_t * src, uint32_t count);
+
 void vesa_memset_rgb(uint8_t * dest, uint32_t rgb, uint32_t count);
 
 void * vesa_get_lfb();

@@ -2,6 +2,16 @@
 
 uint32_t curr_mode;
 
+
+void vesa_memcpy24_32(uint24_t * dest, uint32_t * src, uint32_t count) {
+    uint24_t t;
+    uint32_t i;
+    // How many bytes in total ?
+    for(i = 0; i < count; i++) {
+        t.integer = src[i];
+        dest[i] = t;
+    }
+}
 void vesa_memset_rgb(uint8_t * dest, uint32_t rgb, uint32_t count) {
     if(count % 3 != 0)
         count = count + 3 - (count % 3);
