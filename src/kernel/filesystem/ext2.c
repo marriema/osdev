@@ -591,18 +591,18 @@ uint32_t get_disk_block_number(ext2_fs_t * ext2fs, inode_t * inode, uint32_t ino
     unsigned int * tmp = kmalloc(ext2fs->block_size);
     // How many blocks are left except for direct blocks ?
     a = inode_block - EXT2_DIRECT_BLOCKS;
-    if(a <= 0) {
+    if(a < 0) {
         ret = inode->blocks[inode_block];
         goto done;
     }
     b = a - p;
-    if(b <= 0) {
+    if(b < 0) {
         read_disk_block(ext2fs, inode->blocks[EXT2_DIRECT_BLOCKS], (void*)tmp);
         ret = tmp[a];
         goto done;
     }
     c = b - p * p;
-    if(c <= 0) {
+    if(c < 0) {
         c = b / p;
         d = b - c * p;
         read_disk_block(ext2fs, inode->blocks[EXT2_DIRECT_BLOCKS + 1], (void*)tmp);
@@ -611,7 +611,7 @@ uint32_t get_disk_block_number(ext2_fs_t * ext2fs, inode_t * inode, uint32_t ino
         goto done;
     }
     d = c - p * p * p;
-    if(d <= 0) {
+    if(d < 0) {
         e = c / (p * p);
         f = (c - e * p * p) / p;
         g = (c - e * p * p - f * p);
