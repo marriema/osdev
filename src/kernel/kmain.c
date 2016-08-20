@@ -92,11 +92,22 @@ int kmain(multiboot_info_t * mb_info) {
     vesa_set_mode(0x118 | 0x4000);
     void * t = vesa_get_lfb();
     allocate_region(kpage_dir, (uint32_t)t, (uint32_t)(t + 1024*768*3), 1,1,1);
-
     //vesa_memset_rgb((void*)0xfc000000, 0xaa33ff, 1024*768);
 
+/*
     bitmap_t * bmp = bitmap_create("/wallpaper.bmp");
     bitmap_display(bmp);
+*/
+
+
+    vfs_node_t * f = file_open("/test.txt", 0);
+    uint32_t size = vfs_get_file_size(f);
+    char * buf = kcalloc(size, 1);
+    vfs_read(f, 0, size, buf);
+    for(int i = 0; i < size; i++) {
+         if(buf[i] != 0x1)
+            printf("something is wrong\n");
+    }
 
 
     //vesa_memset_rgb(t, 0x00123456, 0x8000*10);

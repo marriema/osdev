@@ -90,7 +90,7 @@ Now clone the repo to your vm and simply run ./compile.sh to compile the kernel,
 #### Miscellaneous  
 &#160; &#160; &#160; &#160;1 Usermode                                                               [✔]  
 &#160; &#160; &#160; &#160;1 Multi-tasking/Simple scheduler                                         [In Progress]  
-&#160; &#160; &#160; &#160;2 Executable loader(elf)                                                 [In Progress]  
+&#160; &#160; &#160; &#160;2 Executable loader(elf)                                                 [✔]  
 &#160; &#160; &#160; &#160;3 spinlock, mutex, and other pthread primitives                          [In Progress]  
 &#160; &#160; &#160; &#160;4 Add more syscalls, like fork/exec, open, read, etc..                   [In Progress]  
 &#160; &#160; &#160; &#160;5 Port newlib                                                            [In Progress]  
@@ -114,7 +114,7 @@ The plan is subject to change
 
 # Screenshots  
 ![Alt text](/os_screenshots/ss3.png?raw=true "ss3")
-![Alt text](/os_screenshots/ss5.png?raw=true "ss5")
 ![Alt text](/os_screenshots/ss6.png?raw=true "ss6")
 ![Alt text](/os_screenshots/ss7.png?raw=true "ss7")
+![Alt text](/os_screenshots/ss8.png?raw=true "ss8")
 

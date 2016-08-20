@@ -14,6 +14,7 @@ bitmap_t * bitmap_create(char * filename) {
     void * buf = kmalloc(size);
     vfs_read(file, 0, size, buf);
 
+
     // Parse the bitmap
     bmp_fileheader_t * h = buf;
     unsigned int offset = h->bfOffBits;
@@ -26,6 +27,7 @@ bitmap_t * bitmap_create(char * filename) {
     ret->height = info->biHeight;
     ret->image_bytes= (void*)((unsigned int)buf + offset);
     ret->buf = buf;
+    ret->total_size= size;
 
     printf("bitmap is %u x %u\n", ret->width, ret->height);
     printf("file is here: %p\n", buf);
@@ -34,18 +36,32 @@ bitmap_t * bitmap_create(char * filename) {
 }
 
 
-void weird_memcpy(void * dest, void * src, uint32_t count) {
-    char * p1 = dest, * p2 = src;;
-    while(count-- > 0) {
-        memcpy(p1, p2-3, 3);
-        p1 = p1 + 3;
-        p2 = p2 - 3;
-    }
-}
+
 void bitmap_display(bitmap_t * bmp) {
     if(!bmp) return;
-    void * data = bmp->image_bytes;
+    char * image = bmp->image_bytes;
     char * screen = (char*)0xfc000000;
-    weird_memcpy(screen, data + bmp->width * bmp->height * 3, bmp->width * bmp->height);
-    //memcpy(screen, data+ bmp->width * bmp->height * 3, bmp->width * bmp-> height * 3);
+    // Do copy
+    for(int i = 0; i < bmp->height; i++) {
+        // Copy the ith row of image to height - 1 - i row of screen, each row is of length width * 3
+        char * image_row = image + i * bmp->width * 3;
+        char * screen_row = screen + (bmp->height - 1 - i) * bmp->width * 3;
+        memcpy(screen_row, image_row, bmp->width * 3);
+        for(int j = 0; j < bmp->width; j++) {
+            if(image_row[j] != screen_row[j]) {
+                printf("Different pixels in row %d column %d\n", i, j);
+            }
+        }
+    }
+    printf("Everything is fine?\n");
+    for(int i = 0; i < bmp->height; i++) {
+        char * image_row = image + i * bmp->width * 3;
+        char * screen_row = screen + (bmp->height - 1 - i) * bmp->width * 3;
+        for(int j = 0; j < bmp->width; j++) {
+            if(image_row[j] != screen_row[j]) {
+                printf("xx:Different pixels in row %d column %d\n", i, j);
+            }
+        }
+    }
+
 }

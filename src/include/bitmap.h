@@ -32,6 +32,7 @@ typedef struct bitmap {
     unsigned int height;
     char * image_bytes;
     char * buf;
+    unsigned int total_size;
 }bitmap_t;
 
 typedef struct palette {
